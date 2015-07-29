@@ -7,11 +7,12 @@
 在路由配置入口
 <table>
     <tr>
-        <td>var customize = require('./customize');
-
+        <td><pre>
+var customize = require('./customize');
 router.post('/dao', function(req, res, next) {
      return customize.do(req.body,res);
-});</td>
+});
+        </pre></td>
     </tr>
 </table>
 
