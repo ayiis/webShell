@@ -23,5 +23,6 @@ router.post('/dao', function(req, res, next) {
 ````
 
 #### 2015-12-25 Update
-
+````javascripts
 1. 解决编码问题（使用utf8）
+````
